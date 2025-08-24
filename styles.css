@@ -71,24 +71,35 @@ footer {
   margin-top: 2rem;
 }
 
-/* Dark Mode */
-body.dark-mode {
+/* 🌙 Dark Mode */
+body.dark {
   background: #121212;
   color: #f1f1f1;
 }
 
-body.dark-mode header {
+body.dark header {
   background: #333;
 }
 
-body.dark-mode button {
+body.dark button {
   background: #555;
+  color: #f1f1f1;
 }
 
-body.dark-mode th {
-  background: #222;
+body.dark button:hover {
+  background: #666;
 }
 
-body.dark-mode footer {
+body.dark th {
   background: #222;
+  color: #f1f1f1;
+}
+
+body.dark td {
+  border-color: #444;
+}
+
+body.dark footer {
+  background: #222;
+  color: #f1f1f1;
 }
