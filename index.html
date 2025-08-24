@@ -3,154 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stok Gudang Divisi PP</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAqzz-RzFM9mt-NhzC1mFrT8MoZznx1krs",
-      authDomain: "stok-gudang-divisi-pp.firebaseapp.com",
-      projectId: "stok-gudang-divisi-pp",
-      storageBucket: "stok-gudang-divisi-pp.appspot.com",
-      messagingSenderId: "360249323136",
-      appId: "1:360249323136:web:f2fbb13cf41ff59a6a0ec9"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const userInfo = document.getElementById("userInfo");
-    const produkList = document.getElementById("produkList");
-    const produkForm = document.getElementById("produkForm");
-
-    let currentUser = null;
-    const adminEmail = "reyhanmuhamadrizki1@gmail.com";
-
-    function notif(msg, ok=true){
-      const el = document.createElement("div");
-      el.className = `p-2 rounded text-sm ${ok ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`;
-      el.textContent = msg;
-      document.body.appendChild(el);
-      setTimeout(()=>el.remove(), 3000);
-    }
-
-    // Google Login
-    loginBtn.onclick = async () => {
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (e) {
-        console.error(e);
-        notif("Login gagal", false);
-      }
-    };
-
-    // Logout
-    logoutBtn.onclick = async () => {
-      await signOut(auth);
-    };
-
-    // Cek status login
-    onAuthStateChanged(auth, async (user) => {
-      currentUser = user;
-      if(user){
-        if(user.email === adminEmail){
-          userInfo.innerHTML = `Login sebagai ${user.email} <span class="ml-2 px-2 py-0.5 bg-yellow-300 text-yellow-900 text-xs rounded-full">ADMIN</span>`;
-          produkForm.classList.remove("hidden");
-        } else {
-          userInfo.textContent = `Login sebagai ${user.email}`;
-          produkForm.classList.add("hidden");
-        }
-        loginBtn.classList.add("hidden");
-        logoutBtn.classList.remove("hidden");
-      } else {
-        userInfo.textContent = "Belum login";
-        loginBtn.classList.remove("hidden");
-        logoutBtn.classList.add("hidden");
-        produkForm.classList.add("hidden");
-      }
-      loadProduk();
-    });
-
-    // Tambah produk (hanya admin)
-    produkForm.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      if(!currentUser || currentUser.email !== adminEmail){
-        notif("Hanya admin yang bisa menambah produk", false);
-        return;
-      }
-      const nama = document.getElementById("nama").value;
-      const jumlah = parseInt(document.getElementById("jumlah").value);
-      try{
-        await addDoc(collection(db,"produk"), {nama, jumlah});
-        notif("Produk ditambahkan");
-        e.target.reset();
-        loadProduk();
-      }catch(err){notif("Gagal tambah produk",false)}
-    });
-
-    // Load produk
-    async function loadProduk(){
-      produkList.innerHTML = "";
-      const snap = await getDocs(collection(db,"produk"));
-      snap.forEach(docu=>{
-        const data = docu.data();
-        const div = document.createElement("div");
-        div.className = "p-2 border-b flex justify-between";
-        div.innerHTML = `<span>${data.nama} - Stok: ${data.jumlah}</span>`;
-
-        if(currentUser && currentUser.email === adminEmail){
-          const controls = document.createElement("div");
-          controls.className = "space-x-2";
-          controls.innerHTML = `
-            <button class="px-2 bg-blue-500 text-white rounded" data-id="${docu.id}" data-act="add">+1</button>
-            <button class="px-2 bg-red-500 text-white rounded" data-id="${docu.id}" data-act="sub">-1</button>
-          `;
-          div.appendChild(controls);
-        }
-
-        produkList.appendChild(div);
-      });
-
-      if(currentUser && currentUser.email === adminEmail){
-        produkList.querySelectorAll("button").forEach(btn=>{
-          btn.onclick = async () => {
-            const id = btn.dataset.id;
-            const act = btn.dataset.act;
-            const ref = doc(db,"produk",id);
-            const snap = await getDoc(ref);
-            if(snap.exists()){
-              let cur = snap.data().jumlah || 0;
-              cur = act==="add" ? cur+1 : Math.max(0,cur-1);
-              await setDoc(ref,{...snap.data(),jumlah:cur});
-              loadProduk();
-            }
-          }
-        });
-      }
-    }
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Sistem Stok Gudang</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- XLSX untuk Export Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
-<body class="p-6 max-w-xl mx-auto space-y-4">
-  <h1 class="text-xl font-bold">📦 Stok Gudang Divisi PP</h1>
-  <div class="flex justify-between items-center">
-    <span id="userInfo">Belum login</span>
-    <button id="loginBtn" class="px-3 py-1 bg-green-500 text-white rounded">Login Google</button>
-    <button id="logoutBtn" class="hidden px-3 py-1 bg-gray-500 text-white rounded">Logout</button>
-  </div>
+<body>
+  <header>
+    <h1>Sistem Stok Gudang</h1>
+    <div class="auth-controls">
+      <button id="loginBtn">Login dengan Google</button>
+      <button id="logoutBtn" style="display:none;">Logout</button>
+      <span id="userEmail"></span>
+      <button id="darkModeToggle">🌙 Toggle Dark Mode</button>
+    </div>
+  </header>
 
-  <form id="produkForm" class="space-y-2 hidden">
-    <input id="nama" placeholder="Nama produk" required class="border p-2 w-full">
-    <input id="jumlah" type="number" placeholder="Jumlah" required class="border p-2 w-full">
-    <button class="px-3 py-1 bg-blue-600 text-white rounded">Tambah Produk</button>
-  </form>
+  <main>
+    <!-- Hanya admin bisa melihat -->
+    <section id="adminSection" style="display:none;">
+      <h2>Tambah Produk</h2>
+      <form id="productForm">
+        <input type="text" id="productName" placeholder="Nama Produk" required>
+        <input type="number" id="productQty" placeholder="Jumlah" required>
+        <input type="text" id="productCategory" placeholder="Kategori" required>
+        <button type="submit">Tambah</button>
+      </form>
+    </section>
 
-  <div id="produkList" class="border rounded divide-y"></div>
+    <section>
+      <h2>Daftar Produk</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Jumlah</th>
+            <th>Kategori</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="productList"></tbody>
+      </table>
+      <button id="loadMoreBtn">Muat Lebih Banyak</button>
+    </section>
+
+    <section>
+      <h2>Grafik Stok per Kategori</h2>
+      <canvas id="stockChart" width="400" height="200"></canvas>
+    </section>
+
+    <section>
+      <h2>Export Data</h2>
+      <button id="exportCSV">Export CSV</button>
+      <button id="exportExcel">Export Excel</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>📦 Sistem Stok Gudang - Dibuat dengan Firebase & Chart.js</p>
+  </footer>
+
+  <!-- App.js -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
