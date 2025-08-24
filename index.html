@@ -3,199 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stok Gudang - Dashboard Inventaris</title>
+  <title>Stok Gudang Divisi PP</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[#0f172a] text-white p-6">
-  <h1 class="text-3xl font-bold mb-4">Stok Gudang</h1>
-  <p class="mb-6 text-gray-300">Dashboard Inventaris Real-Time</p>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
 
-  <!-- Kelola Stok -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="bg-[#1e293b] p-4 rounded-2xl shadow">
-      <h2 class="text-xl font-semibold mb-4">Kelola Stok</h2>
-      <input id="namaProduk" type="text" placeholder="Nama Produk"
-        class="w-full mb-3 px-3 py-2 rounded bg-gray-800 border border-gray-600">
-      <select id="kategori" class="w-full mb-3 px-3 py-2 rounded bg-gray-800 border border-gray-600">
-        <option value="">Pilih Kategori</option>
-        <option value="Elektronik">Elektronik</option>
-        <option value="Pakaian">Pakaian</option>
-        <option value="Makanan">Makanan</option>
-      </select>
-      <input id="jumlah" type="number" placeholder="Jumlah"
-        class="w-full mb-3 px-3 py-2 rounded bg-gray-800 border border-gray-600">
-      <input id="stokMin" type="number" placeholder="Stok Minimum"
-        class="w-full mb-3 px-3 py-2 rounded bg-gray-800 border border-gray-600">
+  <!-- Header -->
+  <header class="bg-gray-800 p-4 text-center text-2xl font-bold shadow">
+    📦 Stok Gudang Divisi PP
+  </header>
 
-      <div class="flex gap-2">
-        <button id="btnTambah" class="bg-green-600 px-4 py-2 rounded">Tambah Stok</button>
-        <button id="btnKurangi" class="bg-red-600 px-4 py-2 rounded">Kurangi Stok</button>
-      </div>
-    </div>
+  <main class="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <!-- Form Tambah Produk -->
+    <section class="bg-gray-800 p-4 rounded-xl shadow">
+      <h2 class="text-xl font-semibold mb-4">Tambah Produk</h2>
+      <form id="productForm" class="space-y-3">
+        <input id="nama" type="text" placeholder="Nama Produk" class="w-full p-2 rounded text-black" required>
+        <input id="kategori" type="text" placeholder="Kategori Produk" class="w-full p-2 rounded text-black" required>
+        <input id="jumlah" type="number" placeholder="Jumlah" class="w-full p-2 rounded text-black" required>
+        <input id="penginput" type="text" placeholder="Nama Penginput" class="w-full p-2 rounded text-black" required>
+        <button type="submit" class="bg-green-600 px-4 py-2 rounded-lg hover:bg-green-700 w-full">Tambah Produk</button>
+      </form>
+    </section>
 
     <!-- Daftar Produk -->
-    <div class="bg-[#1e293b] p-4 rounded-2xl shadow">
+    <section class="bg-gray-800 p-4 rounded-xl shadow flex flex-col">
       <h2 class="text-xl font-semibold mb-4">Daftar Produk</h2>
-      <table class="w-full text-left border-collapse">
-        <thead>
-          <tr class="border-b border-gray-700">
-            <th class="py-2">Produk</th>
-            <th class="py-2">Kategori</th>
-            <th class="py-2">Stok</th>
-          </tr>
-        </thead>
-        <tbody id="produk-body"></tbody>
-      </table>
-    </div>
-  </div>
+      <input type="text" id="searchProduk" placeholder="Cari produk..." class="w-full p-2 mb-3 rounded text-black">
+      <div id="produkList" class="overflow-y-auto h-80 border border-gray-700 rounded p-2"></div>
+    </section>
 
-  <!-- Riwayat -->
-  <div class="bg-[#1e293b] p-4 rounded-2xl shadow mt-6">
-    <h2 class="text-xl font-semibold mb-4">Riwayat Perubahan</h2>
-    <table class="w-full text-left border-collapse">
-      <thead>
-        <tr class="border-b border-gray-700">
-          <th class="py-2">Waktu</th>
-          <th class="py-2">Produk</th>
-          <th class="py-2">Aktivitas</th>
-          <th class="py-2">Jumlah</th>
-          <th class="py-2">Oleh</th>
-        </tr>
-      </thead>
-      <tbody id="riwayat-body"></tbody>
-    </table>
-  </div>
+    <!-- Riwayat -->
+    <section class="bg-gray-800 p-4 rounded-xl shadow flex flex-col md:col-span-2">
+      <h2 class="text-xl font-semibold mb-4">Riwayat Perubahan</h2>
+      <div class="flex gap-2 mb-3">
+        <select id="filterRiwayat" class="p-2 rounded text-black">
+          <option value="7">7 Hari Terakhir</option>
+          <option value="30">30 Hari Terakhir</option>
+          <option value="all">Semua</option>
+        </select>
+        <input type="date" id="tanggalSpesifik" class="p-2 rounded text-black">
+      </div>
+      <div id="riwayatList" class="overflow-y-auto h-80 border border-gray-700 rounded p-2"></div>
+    </section>
 
-  <!-- Firebase + Script -->
+  </main>
+
+  <!-- Firebase & Script -->
   <script type="module">
-    // ================= FIREBASE CONFIG =================
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { 
-      getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, 
-      serverTimestamp, onSnapshot 
-    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+      getFirestore, collection, addDoc, setDoc, getDoc, doc, updateDoc, 
+      increment, onSnapshot, query, orderBy, where 
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-    // GANTI dengan config Firebase project kamu
+    // ✅ Config Firebase punyamu
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyCk_9zFTS5CRgmIcuswG_gvpLVWx2PcF58",
+      authDomain: "stok-gudang-divisi-pp.firebaseapp.com",
+      projectId: "stok-gudang-divisi-pp",
+      storageBucket: "stok-gudang-divisi-pp.firebasestorage.app",
+      messagingSenderId: "838303987838",
+      appId: "1:838303987838:web:e16829f449925469ae002f",
+      measurementId: "G-QYH5LD18NT"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Collection
-    const productsRef = collection(db, "products");
-    const historyRef = collection(db, "history");
+    const produkList = document.getElementById("produkList");
+    const riwayatList = document.getElementById("riwayatList");
 
-    // Tambah Stok
-    async function tambahStok() {
-      const nama = document.getElementById("namaProduk").value;
-      const kategori = document.getElementById("kategori").value;
-      const jumlah = parseInt(document.getElementById("jumlah").value) || 0;
-      const stokMin = parseInt(document.getElementById("stokMin").value) || 0;
+    // 🔹 Tambah Produk
+    document.getElementById("productForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nama = document.getElementById("nama").value.trim();
+      const kategori = document.getElementById("kategori").value.trim();
+      const jumlah = parseInt(document.getElementById("jumlah").value);
+      const penginput = document.getElementById("penginput").value.trim();
 
-      if (!nama || jumlah <= 0) return alert("Isi nama produk & jumlah!");
+      // ✅ Validasi
+      if (!nama) return alert("Nama produk wajib diisi!");
+      if (!kategori) return alert("Kategori wajib diisi!");
+      if (!jumlah || jumlah <= 0) return alert("Jumlah harus lebih dari 0!");
+      if (!penginput) return alert("Nama penginput wajib diisi!");
 
-      const productDoc = doc(productsRef, nama);
-      const productSnap = await getDoc(productDoc);
+      const productRef = doc(db, "produk", nama);
+      const docSnap = await getDoc(productRef);
 
-      if (productSnap.exists()) {
-        const data = productSnap.data();
-        await updateDoc(productDoc, {
-          stok: (data.stok || 0) + jumlah,
-          updatedAt: serverTimestamp()
-        });
+      if (docSnap.exists()) {
+        await updateDoc(productRef, { jumlah: increment(jumlah) });
       } else {
-        await setDoc(productDoc, {
-          nama: nama,
-          kategori: kategori,
-          stok: jumlah,
-          stokMin: stokMin,
-          createdAt: serverTimestamp()
-        });
+        await setDoc(productRef, { nama, kategori, jumlah });
       }
 
-      await addDoc(historyRef, {
-        waktu: serverTimestamp(),
-        produk: nama,
-        aktivitas: "Tambah Stok",
-        jumlah: jumlah,
-        oleh: "Admin"
+      await addDoc(collection(db, "riwayat"), {
+        nama, kategori, jumlah, penginput, waktu: new Date()
       });
-    }
 
-    // Kurangi Stok
-    async function kurangiStok() {
-      const nama = document.getElementById("namaProduk").value;
-      const jumlah = parseInt(document.getElementById("jumlah").value) || 0;
-      if (!nama || jumlah <= 0) return alert("Isi nama produk & jumlah!");
+      e.target.reset();
+    });
 
-      const productDoc = doc(productsRef, nama);
-      const productSnap = await getDoc(productDoc);
-
-      if (productSnap.exists()) {
-        const data = productSnap.data();
-        await updateDoc(productDoc, {
-          stok: Math.max((data.stok || 0) - jumlah, 0),
-          updatedAt: serverTimestamp()
-        });
-
-        await addDoc(historyRef, {
-          waktu: serverTimestamp(),
-          produk: nama,
-          aktivitas: "Kurangi Stok",
-          jumlah: jumlah,
-          oleh: "Admin"
-        });
-      } else {
-        alert("Produk tidak ditemukan!");
-      }
-    }
-
-    // Listener Produk
-    onSnapshot(productsRef, (snapshot) => {
-      const tbody = document.getElementById("produk-body");
-      tbody.innerHTML = "";
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="py-2">${d.nama}</td>
-          <td class="py-2">${d.kategori}</td>
-          <td class="py-2">${d.stok}</td>
-        `;
-        tbody.appendChild(tr);
+    // 🔹 Realtime Daftar Produk
+    onSnapshot(collection(db, "produk"), (snapshot) => {
+      produkList.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const p = doc.data();
+        produkList.innerHTML += `
+          <div class="border-b border-gray-700 py-1">
+            <span class="font-bold">${p.nama}</span> 
+            <span class="text-gray-400">(${p.kategori})</span> 
+            - <span class="text-green-400">${p.jumlah}</span>
+          </div>`;
       });
     });
 
-    // Listener Riwayat
-    onSnapshot(historyRef, (snapshot) => {
-      const tbody = document.getElementById("riwayat-body");
-      tbody.innerHTML = "";
-      snapshot.docs.sort((a,b)=>b.data().waktu?.seconds - a.data().waktu?.seconds)
-      .forEach(doc => {
-        const d = doc.data();
-        const waktu = d.waktu?.seconds ? new Date(d.waktu.seconds * 1000).toLocaleString() : "-";
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="py-2">${waktu}</td>
-          <td class="py-2">${d.produk}</td>
-          <td class="py-2">${d.aktivitas}</td>
-          <td class="py-2">${d.jumlah}</td>
-          <td class="py-2">${d.oleh}</td>
-        `;
-        tbody.appendChild(tr);
+    // 🔹 Realtime Riwayat
+    onSnapshot(query(collection(db, "riwayat"), orderBy("waktu", "desc")), (snapshot) => {
+      riwayatList.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const r = doc.data();
+        const waktu = r.waktu.toDate().toLocaleString("id-ID");
+        riwayatList.innerHTML += `
+          <div class="border-b border-gray-700 py-1">
+            <span class="font-bold">${r.nama}</span> 
+            (${r.kategori}) sejumlah <span class="text-green-400">+${r.jumlah}</span> 
+            oleh <span class="text-blue-400">${r.penginput}</span> 
+            <span class="text-gray-400">(${waktu})</span>
+          </div>`;
       });
     });
 
-    // Event Listener
-    document.getElementById("btnTambah").addEventListener("click", tambahStok);
-    document.getElementById("btnKurangi").addEventListener("click", kurangiStok);
   </script>
 </body>
 </html>
