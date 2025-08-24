@@ -1,72 +1,134 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Stok Gudang</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stok Gudang Divisi PP</title>
+  <link rel="stylesheet" href="styles.css"/>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- XLSX -->
+  <!-- XLSX (untuk ekspor, kita tetap generate CSV/XLS sederhana di JS) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>Sistem Stok Gudang</h1>
+    <h1>Stok Gudang Divisi PP</h1>
     <div class="auth-controls">
       <button id="loginBtn">Login dengan Google</button>
       <button id="logoutBtn" style="display:none;">Logout</button>
-      <span id="userEmail"></span>
-      <button id="darkModeToggle">🌙 Toggle Dark Mode</button>
+      <span id="userEmail">Belum login</span>
+      <button id="darkModeToggle" title="Toggle Dark Mode">🌙</button>
     </div>
   </header>
 
-  <main>
-    <!-- Hanya admin yang bisa melihat ini -->
-    <section id="adminSection" style="display:none;">
-      <h2>Tambah Produk</h2>
-      <form id="productForm">
-        <input type="text" id="productName" placeholder="Nama Produk" required>
-        <input type="number" id="productQty" placeholder="Jumlah" required>
-        <input type="text" id="productCategory" placeholder="Kategori" required>
-        <button type="submit">Tambah</button>
-      </form>
+  <main class="container">
+    <!-- Kiri: Produk + Filter + Riwayat -->
+    <section class="left-col">
+      <!-- Admin Panel -->
+      <section id="adminSection" class="card" style="display:none;">
+        <div class="card-header">
+          <h2>Tambah Produk</h2>
+        </div>
+        <form id="productForm" class="form-grid">
+          <input type="text" id="productName" placeholder="Nama Produk" required />
+          <input type="number" id="productQty" placeholder="Jumlah" required />
+          <div class="row">
+            <select id="productCategory" required>
+              <option value="" disabled selected>Pilih Kategori</option>
+            </select>
+            <input type="text" id="newCategoryName" placeholder="Tambah kategori baru (opsional)"/>
+            <button type="button" id="addCategoryBtn" class="secondary">+ Kategori</button>
+          </div>
+          <button type="submit">Tambah</button>
+        </form>
+        <small class="muted">Produk baru otomatis menyimpan siapa yang menambahkan serta waktu tambah (server).</small>
+      </section>
+
+      <!-- Filter & Search Produk -->
+      <section class="card">
+        <div class="card-header">
+          <h2>Daftar Produk</h2>
+        </div>
+
+        <div class="filters">
+          <input type="text" id="searchInput" placeholder="Cari produk... (nama)"/>
+          <select id="filterCategory">
+            <option value="">Semua Kategori</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>Jumlah</th>
+                <th>Kategori</th>
+                <th>Dibuat oleh</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="productList"></tbody>
+          </table>
+        </div>
+        <div class="actions-row">
+          <button id="exportCSV">Export CSV</button>
+          <button id="exportExcel">Export Excel</button>
+        </div>
+      </section>
+
+      <!-- Riwayat -->
+      <section class="card">
+        <div class="card-header">
+          <h2>Riwayat</h2>
+        </div>
+
+        <div class="filters history-filters">
+          <select id="historyQuickRange">
+            <option value="7">7 hari terakhir</option>
+            <option value="30">30 hari terakhir</option>
+            <option value="custom">Rentang tanggal…</option>
+          </select>
+          <input type="date" id="historyStart" disabled />
+          <input type="date" id="historyEnd" disabled />
+          <button id="applyHistoryFilter" class="secondary">Terapkan</button>
+          <input type="text" id="historySearch" placeholder="Cari di riwayat (nama produk / user / aksi)"/>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Waktu</th>
+                <th>Aksi</th>
+                <th>Nama Produk</th>
+                <th>Perubahan</th>
+                <th>Oleh</th>
+              </tr>
+            </thead>
+            <tbody id="historyList"></tbody>
+          </table>
+        </div>
+      </section>
     </section>
 
-    <section>
-      <h2>Daftar Produk</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Nama</th>
-            <th>Jumlah</th>
-            <th>Kategori</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="productList"></tbody>
-      </table>
-      <button id="loadMoreBtn">Muat Lebih Banyak</button>
-    </section>
-
-    <section>
-      <h2>Grafik Stok per Kategori</h2>
-      <canvas id="stockChart" width="400" height="200"></canvas>
-    </section>
-
-    <section>
-      <h2>Export Data</h2>
-      <button id="exportCSV">Export CSV</button>
-      <button id="exportExcel">Export Excel</button>
+    <!-- Kanan: Grafik -->
+    <section class="right-col">
+      <section class="card">
+        <div class="card-header">
+          <h2>Grafik Stok per Kategori</h2>
+        </div>
+        <canvas id="stockChart" height="260"></canvas>
+        <small class="muted">Grafik mengikuti hasil filter & pencarian produk saat ini.</small>
+      </section>
     </section>
   </main>
 
   <footer>
-    <p>📦 Sistem Stok Gudang - Dibuat dengan Firebase & Chart.js</p>
+    <p>📦 Stok Gudang Divisi PP — Firebase & Chart.js (Realtime)</p>
   </footer>
 
-  <!-- App -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
