@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistem Stok Gudang</title>
   <link rel="stylesheet" href="styles.css">
+
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- XLSX untuk Export Excel -->
+  <!-- XLSX -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -22,7 +23,7 @@
   </header>
 
   <main>
-    <!-- Hanya admin bisa melihat -->
+    <!-- Hanya admin yang bisa melihat ini -->
     <section id="adminSection" style="display:none;">
       <h2>Tambah Produk</h2>
       <form id="productForm">
@@ -65,7 +66,7 @@
     <p>📦 Sistem Stok Gudang - Dibuat dengan Firebase & Chart.js</p>
   </footer>
 
-  <!-- App.js -->
+  <!-- App -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
