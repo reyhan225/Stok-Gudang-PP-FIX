@@ -42,8 +42,8 @@ const db = getFirestore(app);
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const userEmail = document.getElementById("userEmail");
-const addProductForm = document.getElementById("addProductForm");
-const productTable = document.getElementById("productTable").querySelector("tbody");
+const addProductForm = document.getElementById("productForm"); // ✅ diperbaiki
+const productTable = document.getElementById("productList");   // ✅ diperbaiki
 const chartCanvas = document.getElementById("stockChart");
 const darkModeToggle = document.getElementById("darkModeToggle");
 const exportCSV = document.getElementById("exportCSV");
@@ -73,18 +73,18 @@ logoutBtn.addEventListener("click", async () => {
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     userEmail.textContent = user.email;
-    loginBtn.classList.add("hidden");
-    logoutBtn.classList.remove("hidden");
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
 
     // Hanya admin yang bisa tambah/edit/hapus
     isAdmin = user.email === "reyhanmuhamadrizki1@gmail.com";
-    document.getElementById("adminPanel").style.display = isAdmin ? "block" : "none";
+    document.getElementById("adminSection").style.display = isAdmin ? "block" : "none"; // ✅ diperbaiki
 
     loadProducts(true);
   } else {
     userEmail.textContent = "Belum login";
-    loginBtn.classList.remove("hidden");
-    logoutBtn.classList.add("hidden");
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
     productTable.innerHTML = "";
   }
 });
@@ -97,7 +97,7 @@ if (addProductForm) {
 
     const name = e.target.productName.value;
     const category = e.target.productCategory.value;
-    const stock = parseInt(e.target.productStock.value);
+    const stock = parseInt(e.target.productQty.value); // ✅ diperbaiki
 
     try {
       await addDoc(collection(db, "products"), { name, category, stock });
@@ -147,15 +147,15 @@ function renderRow(id, data) {
   const tr = document.createElement("tr");
   tr.innerHTML = `
     <td>${data.name}</td>
+    <td>${data.stock}</td>      <!-- ✅ urutan benar -->
     <td>${data.category}</td>
-    <td>${data.stock}</td>
     ${
       isAdmin
         ? `<td>
           <button onclick="editProduct('${id}')">✏️</button>
           <button onclick="deleteProduct('${id}')">🗑️</button>
         </td>`
-        : ""
+        : "<td>-</td>"
     }
   `;
   productTable.appendChild(tr);
