@@ -1,201 +1,156 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stok Gudang Divisi PP</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 text-gray-900">
-
-  <!-- Navbar -->
-  <nav class="bg-blue-600 text-white p-4 flex justify-between items-center">
-    <h1 class="text-lg font-bold">📦 Stok Gudang PP</h1>
-    <div id="user-info" class="flex items-center space-x-2"></div>
-  </nav>
-
-  <!-- Kontainer utama -->
-  <div class="max-w-4xl mx-auto p-4">
-
-    <!-- Form Login -->
-    <div id="login-section" class="bg-white p-4 rounded shadow mb-4">
-      <h2 class="text-lg font-semibold mb-2">Login</h2>
-      <input id="email" type="email" placeholder="Email" class="border p-2 w-full mb-2 rounded" />
-      <input id="password" type="password" placeholder="Password" class="border p-2 w-full mb-2 rounded" />
-      <button id="loginBtn" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Login</button>
-      <button id="registerBtn" class="bg-gray-600 text-white px-4 py-2 rounded w-full mt-2">Register</button>
-    </div>
-
-    <!-- Menu Admin -->
-    <div id="admin-section" class="hidden bg-white p-4 rounded shadow mb-4">
-      <h2 class="text-lg font-semibold mb-2">Tambah Produk</h2>
-      <input id="nama" placeholder="Nama produk" class="border p-2 w-full mb-2 rounded" />
-      <input id="jumlah" type="number" placeholder="Jumlah" class="border p-2 w-full mb-2 rounded" />
-      <button id="addBtn" class="bg-green-600 text-white px-4 py-2 rounded w-full">Tambah</button>
-    </div>
-
-    <!-- Daftar Produk -->
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-lg font-semibold mb-2">📋 Daftar Produk</h2>
-      <div id="produk-list" class="space-y-2"></div>
-    </div>
-  </div>
-
-  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { 
-      getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-      getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, getDoc 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Firebase config
     const firebaseConfig = {
-      apiKey: "AIzaSyDxHMlFNP2QW1rrNFEJHXczemGWmMub7AE",
+      apiKey: "AIzaSyAqzz-RzFM9mt-NhzC1mFrT8MoZznx1krs",
       authDomain: "stok-gudang-divisi-pp.firebaseapp.com",
       projectId: "stok-gudang-divisi-pp",
       storageBucket: "stok-gudang-divisi-pp.appspot.com",
-      messagingSenderId: "1045557753888",
-      appId: "1:1045557753888:web:e8f841b8ecda8c37f92d6b"
+      messagingSenderId: "360249323136",
+      appId: "1:360249323136:web:f2fbb13cf41ff59a6a0ec9"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const loginSection = document.getElementById("login-section");
-    const adminSection = document.getElementById("admin-section");
-    const userInfo = document.getElementById("user-info");
-    const produkList = document.getElementById("produk-list");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const userInfo = document.getElementById("userInfo");
+    const produkList = document.getElementById("produkList");
+    const produkForm = document.getElementById("produkForm");
 
-    const ADMIN_EMAILS = ["reyhanmuhamadrizki1@gmail.com"];
+    let currentUser = null;
+    const adminEmail = "reyhanmuhamadrizki1@gmail.com";
 
-    // Login
-    document.getElementById("loginBtn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        notif("Login berhasil!", true);
-      } catch (err) {
-        notif("Login gagal: " + err.message, false);
-      }
-    });
-
-    // Register
-    document.getElementById("registerBtn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        notif("Registrasi berhasil!", true);
-      } catch (err) {
-        notif("Registrasi gagal: " + err.message, false);
-      }
-    });
-
-    // Auth state
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        userInfo.innerHTML = `
-          <span>${user.email}</span>
-          <button id="logoutBtn" class="bg-red-500 text-white px-2 py-1 rounded">Logout</button>
-        `;
-        document.getElementById("logoutBtn").addEventListener("click", async () => {
-          await signOut(auth);
-        });
-
-        loginSection.classList.add("hidden");
-        adminSection.classList.toggle("hidden", !ADMIN_EMAILS.includes(user.email));
-      } else {
-        userInfo.innerHTML = "";
-        loginSection.classList.remove("hidden");
-        adminSection.classList.add("hidden");
-      }
-    });
-
-    // Tambah produk
-    document.getElementById("addBtn").addEventListener("click", async () => {
-      const nama = document.getElementById("nama").value;
-      const jumlah = parseInt(document.getElementById("jumlah").value);
-      if (!nama || isNaN(jumlah)) return notif("Isi semua field!", false);
-
-      try {
-        await addDoc(collection(db, "produk"), { nama, jumlah });
-        notif("Produk ditambahkan!", true);
-        document.getElementById("nama").value = "";
-        document.getElementById("jumlah").value = "";
-      } catch (err) {
-        notif("Gagal tambah produk: " + err.message, false);
-      }
-    });
-
-    // Update UI produk realtime
-    onSnapshot(collection(db, "produk"), (snapshot) => {
-      produkList.innerHTML = "";
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const div = document.createElement("div");
-        div.className = "p-3 border rounded flex justify-between items-center";
-
-        div.innerHTML = `
-          <span>${data.nama} - <strong>${data.jumlah}</strong></span>
-          <div class="space-x-2">
-            <button data-id="${docSnap.id}" class="add bg-blue-500 text-white px-2 py-1 rounded">+1</button>
-            <button data-id="${docSnap.id}" class="subtract bg-yellow-500 text-white px-2 py-1 rounded">-1</button>
-            <button data-id="${docSnap.id}" class="delete bg-red-500 text-white px-2 py-1 rounded">Hapus</button>
-          </div>
-        `;
-        produkList.appendChild(div);
-      });
-
-      // Tambah stok
-      document.querySelectorAll(".add").forEach((btn) =>
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          const prodRef = doc(db, "produk", id);
-          const snap = await getDoc(prodRef);
-          if (snap.exists()) {
-            const cur = snap.data().jumlah || 0;
-            await updateDoc(prodRef, { jumlah: cur + 1 });
-          }
-        })
-      );
-
-      // Kurangi stok
-      document.querySelectorAll(".subtract").forEach((btn) =>
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          const prodRef = doc(db, "produk", id);
-          const snap = await getDoc(prodRef);
-          if (snap.exists()) {
-            const cur = snap.data().jumlah || 0;
-            if (cur > 0) {
-              await updateDoc(prodRef, { jumlah: cur - 1 });
-            }
-          }
-        })
-      );
-
-      // Hapus produk
-      document.querySelectorAll(".delete").forEach((btn) =>
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          await deleteDoc(doc(db, "produk", id));
-        })
-      );
-    });
-
-    // Notifikasi
-    function notif(msg, ok) {
+    function notif(msg, ok=true){
       const el = document.createElement("div");
       el.className = `p-2 rounded text-sm ${ok ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`;
       el.textContent = msg;
       document.body.appendChild(el);
-      setTimeout(() => el.remove(), 3000);
+      setTimeout(()=>el.remove(), 3000);
+    }
+
+    // Google Login
+    loginBtn.onclick = async () => {
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        console.error(e);
+        notif("Login gagal", false);
+      }
+    };
+
+    // Logout
+    logoutBtn.onclick = async () => {
+      await signOut(auth);
+    };
+
+    // Cek status login
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      if(user){
+        if(user.email === adminEmail){
+          userInfo.innerHTML = `Login sebagai ${user.email} <span class="ml-2 px-2 py-0.5 bg-yellow-300 text-yellow-900 text-xs rounded-full">ADMIN</span>`;
+          produkForm.classList.remove("hidden");
+        } else {
+          userInfo.textContent = `Login sebagai ${user.email}`;
+          produkForm.classList.add("hidden");
+        }
+        loginBtn.classList.add("hidden");
+        logoutBtn.classList.remove("hidden");
+      } else {
+        userInfo.textContent = "Belum login";
+        loginBtn.classList.remove("hidden");
+        logoutBtn.classList.add("hidden");
+        produkForm.classList.add("hidden");
+      }
+      loadProduk();
+    });
+
+    // Tambah produk (hanya admin)
+    produkForm.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      if(!currentUser || currentUser.email !== adminEmail){
+        notif("Hanya admin yang bisa menambah produk", false);
+        return;
+      }
+      const nama = document.getElementById("nama").value;
+      const jumlah = parseInt(document.getElementById("jumlah").value);
+      try{
+        await addDoc(collection(db,"produk"), {nama, jumlah});
+        notif("Produk ditambahkan");
+        e.target.reset();
+        loadProduk();
+      }catch(err){notif("Gagal tambah produk",false)}
+    });
+
+    // Load produk
+    async function loadProduk(){
+      produkList.innerHTML = "";
+      const snap = await getDocs(collection(db,"produk"));
+      snap.forEach(docu=>{
+        const data = docu.data();
+        const div = document.createElement("div");
+        div.className = "p-2 border-b flex justify-between";
+        div.innerHTML = `<span>${data.nama} - Stok: ${data.jumlah}</span>`;
+
+        if(currentUser && currentUser.email === adminEmail){
+          const controls = document.createElement("div");
+          controls.className = "space-x-2";
+          controls.innerHTML = `
+            <button class="px-2 bg-blue-500 text-white rounded" data-id="${docu.id}" data-act="add">+1</button>
+            <button class="px-2 bg-red-500 text-white rounded" data-id="${docu.id}" data-act="sub">-1</button>
+          `;
+          div.appendChild(controls);
+        }
+
+        produkList.appendChild(div);
+      });
+
+      if(currentUser && currentUser.email === adminEmail){
+        produkList.querySelectorAll("button").forEach(btn=>{
+          btn.onclick = async () => {
+            const id = btn.dataset.id;
+            const act = btn.dataset.act;
+            const ref = doc(db,"produk",id);
+            const snap = await getDoc(ref);
+            if(snap.exists()){
+              let cur = snap.data().jumlah || 0;
+              cur = act==="add" ? cur+1 : Math.max(0,cur-1);
+              await setDoc(ref,{...snap.data(),jumlah:cur});
+              loadProduk();
+            }
+          }
+        });
+      }
     }
   </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-6 max-w-xl mx-auto space-y-4">
+  <h1 class="text-xl font-bold">📦 Stok Gudang Divisi PP</h1>
+  <div class="flex justify-between items-center">
+    <span id="userInfo">Belum login</span>
+    <button id="loginBtn" class="px-3 py-1 bg-green-500 text-white rounded">Login Google</button>
+    <button id="logoutBtn" class="hidden px-3 py-1 bg-gray-500 text-white rounded">Logout</button>
+  </div>
+
+  <form id="produkForm" class="space-y-2 hidden">
+    <input id="nama" placeholder="Nama produk" required class="border p-2 w-full">
+    <input id="jumlah" type="number" placeholder="Jumlah" required class="border p-2 w-full">
+    <button class="px-3 py-1 bg-blue-600 text-white rounded">Tambah Produk</button>
+  </form>
+
+  <div id="produkList" class="border rounded divide-y"></div>
 </body>
 </html>
