@@ -1,44 +1,43 @@
-# 📦 Aplikasi Stok Gudang
+# 📦 Gudang Stok Barang
 
-Aplikasi web untuk mengelola stok gudang dengan **Firebase Firestore** &
-**Firebase Authentication (Google Login)**.\
-Didesain agar admin dapat menambah/mengedit/menghapus produk, sementara
-user biasa hanya dapat melihat data.
+Aplikasi web untuk **manajemen stok gudang** dengan fitur login Google, CRUD produk, grafik stok per kategori, export data, pagination, infinite scroll, dan dark mode.  
+Dibangun menggunakan **Firebase + Vanilla JS + Chart.js**.
 
-------------------------------------------------------------------------
+---
+
+## 📂 Struktur Folder
+```bash
+gudang-stok-barang/
+│── index.html       # Halaman utama
+│── styles.css       # Styling tampilan (light & dark mode)
+│── app.js           # Logic aplikasi (Firebase, CRUD, Chart, Export, Auth)
+│── README.md        # Dokumentasi
+└── assets/          # Screenshot UI (untuk README)
+    ├── preview-login.png
+    ├── preview-dashboard.png
+    ├── preview-chart.png
+    └── preview-darkmode.png
+```
+
+---
 
 ## 🚀 Fitur Utama
+- 🔑 **Login Google** (Firebase Authentication)  
+- 🔒 **Role Admin** → hanya admin (`reyhanmuhamadrizki1@gmail.com`) yang bisa menambah/edit/hapus produk  
+- 📦 **CRUD Produk** → tambah, edit, hapus, lihat daftar produk  
+- 📑 **Pagination + Infinite Scroll** → load produk bertahap  
+- 📊 **Grafik Stok per Kategori** (Chart.js)  
+- 📤 **Export Data** → CSV & Excel  
+- 🌗 **Dark Mode Toggle** (tersimpan di localStorage)  
 
--   🔑 **Login dengan Google**
--   👀 Semua user bisa **lihat data produk**
--   🛠️ **Admin** (email terdaftar) bisa:
-    -   Tambah produk
-    -   Edit produk
-    -   Hapus produk
--   📥 Export data stok ke:
-    -   **Excel (.xlsx)**
-    -   **CSV (.csv)**
--   📈 Grafik stok per kategori
--   📜 Pagination & infinite scroll
--   🔒 Keamanan dengan **Firestore Security Rules**
+---
 
-------------------------------------------------------------------------
+## 🔧 Teknologi yang Digunakan
+- **Frontend:** HTML, CSS, JavaScript (Vanilla)  
+- **Backend:** Firebase Firestore + Firebase Authentication  
+- **Chart:** Chart.js (visualisasi data stok)  
 
-## 🛠️ Teknologi
+---
 
--   [Firebase Authentication](https://firebase.google.com/docs/auth)
--   [Firebase Firestore](https://firebase.google.com/docs/firestore)
--   [Chart.js](https://www.chartjs.org/) untuk grafik
--   [SheetJS](https://sheetjs.com/) untuk export Excel
--   HTML, CSS (Tailwind), JavaScript
-
-## 📌 Catatan
-
--   Gunakan browser modern (Chrome, Edge, Safari).
--   Pastikan akun Google sudah login sebelum mengakses fitur admin.
-
-------------------------------------------------------------------------
-
-## 📄 Lisensi
-
-MIT License
+## 📜 Lisensi
+MIT License © 2025  
