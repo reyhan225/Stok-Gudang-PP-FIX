@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stok Gudang - Dashboard Inventaris</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0f172a] text-white p-6">
+  <h1 class="text-3xl font-bold mb-4">Stok Gudang</h1>
+  <p class="mb-6 text-gray-300">Dashboard Inventaris Real-Time</p>
+
+  <!-- Kelola Stok -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-[#1e293b] p-4 rounded-2xl shadow">
+      <h2 class="text-xl font-semibold mb-4">Kelola Stok</h2>
+      <input id="namaProduk" type="text" placeholder="Nama Produk"
+        class="w-full mb-3 px-3 py-2 rounded bg-gray-800 border border-gray-600">
+      <select id="kategori" class="w-full mb-3 px-3 py-2 rounded bg-gray-800 border border-gray-600">
+        <option value="">Pilih Kategori</option>
+        <option value="Elektronik">Elektronik</option>
+        <option value="Pakaian">Pakaian</option>
+        <option value="Makanan">Makanan</option>
+      </select>
+      <input id="jumlah" type="number" placeholder="Jumlah"
+        class="w-full mb-3 px-3 py-2 rounded bg-gray-800 border border-gray-600">
+      <input id="stokMin" type="number" placeholder="Stok Minimum"
+        class="w-full mb-3 px-3 py-2 rounded bg-gray-800 border border-gray-600">
+
+      <div class="flex gap-2">
+        <button id="btnTambah" class="bg-green-600 px-4 py-2 rounded">Tambah Stok</button>
+        <button id="btnKurangi" class="bg-red-600 px-4 py-2 rounded">Kurangi Stok</button>
+      </div>
+    </div>
+
+    <!-- Daftar Produk -->
+    <div class="bg-[#1e293b] p-4 rounded-2xl shadow">
+      <h2 class="text-xl font-semibold mb-4">Daftar Produk</h2>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-gray-700">
+            <th class="py-2">Produk</th>
+            <th class="py-2">Kategori</th>
+            <th class="py-2">Stok</th>
+          </tr>
+        </thead>
+        <tbody id="produk-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Riwayat -->
+  <div class="bg-[#1e293b] p-4 rounded-2xl shadow mt-6">
+    <h2 class="text-xl font-semibold mb-4">Riwayat Perubahan</h2>
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="border-b border-gray-700">
+          <th class="py-2">Waktu</th>
+          <th class="py-2">Produk</th>
+          <th class="py-2">Aktivitas</th>
+          <th class="py-2">Jumlah</th>
+          <th class="py-2">Oleh</th>
+        </tr>
+      </thead>
+      <tbody id="riwayat-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Firebase + Script -->
+  <script type="module">
+    // ================= FIREBASE CONFIG =================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { 
+      getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, 
+      serverTimestamp, onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    // GANTI dengan config Firebase project kamu
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Collection
+    const productsRef = collection(db, "products");
+    const historyRef = collection(db, "history");
+
+    // Tambah Stok
+    async function tambahStok() {
+      const nama = document.getElementById("namaProduk").value;
+      const kategori = document.getElementById("kategori").value;
+      const jumlah = parseInt(document.getElementById("jumlah").value) || 0;
+      const stokMin = parseInt(document.getElementById("stokMin").value) || 0;
+
+      if (!nama || jumlah <= 0) return alert("Isi nama produk & jumlah!");
+
+      const productDoc = doc(productsRef, nama);
+      const productSnap = await getDoc(productDoc);
+
+      if (productSnap.exists()) {
+        const data = productSnap.data();
+        await updateDoc(productDoc, {
+          stok: (data.stok || 0) + jumlah,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        await setDoc(productDoc, {
+          nama: nama,
+          kategori: kategori,
+          stok: jumlah,
+          stokMin: stokMin,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      await addDoc(historyRef, {
+        waktu: serverTimestamp(),
+        produk: nama,
+        aktivitas: "Tambah Stok",
+        jumlah: jumlah,
+        oleh: "Admin"
+      });
+    }
+
+    // Kurangi Stok
+    async function kurangiStok() {
+      const nama = document.getElementById("namaProduk").value;
+      const jumlah = parseInt(document.getElementById("jumlah").value) || 0;
+      if (!nama || jumlah <= 0) return alert("Isi nama produk & jumlah!");
+
+      const productDoc = doc(productsRef, nama);
+      const productSnap = await getDoc(productDoc);
+
+      if (productSnap.exists()) {
+        const data = productSnap.data();
+        await updateDoc(productDoc, {
+          stok: Math.max((data.stok || 0) - jumlah, 0),
+          updatedAt: serverTimestamp()
+        });
+
+        await addDoc(historyRef, {
+          waktu: serverTimestamp(),
+          produk: nama,
+          aktivitas: "Kurangi Stok",
+          jumlah: jumlah,
+          oleh: "Admin"
+        });
+      } else {
+        alert("Produk tidak ditemukan!");
+      }
+    }
+
+    // Listener Produk
+    onSnapshot(productsRef, (snapshot) => {
+      const tbody = document.getElementById("produk-body");
+      tbody.innerHTML = "";
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="py-2">${d.nama}</td>
+          <td class="py-2">${d.kategori}</td>
+          <td class="py-2">${d.stok}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+
+    // Listener Riwayat
+    onSnapshot(historyRef, (snapshot) => {
+      const tbody = document.getElementById("riwayat-body");
+      tbody.innerHTML = "";
+      snapshot.docs.sort((a,b)=>b.data().waktu?.seconds - a.data().waktu?.seconds)
+      .forEach(doc => {
+        const d = doc.data();
+        const waktu = d.waktu?.seconds ? new Date(d.waktu.seconds * 1000).toLocaleString() : "-";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="py-2">${waktu}</td>
+          <td class="py-2">${d.produk}</td>
+          <td class="py-2">${d.aktivitas}</td>
+          <td class="py-2">${d.jumlah}</td>
+          <td class="py-2">${d.oleh}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+
+    // Event Listener
+    document.getElementById("btnTambah").addEventListener("click", tambahStok);
+    document.getElementById("btnKurangi").addEventListener("click", kurangiStok);
+  </script>
+</body>
+</html>
