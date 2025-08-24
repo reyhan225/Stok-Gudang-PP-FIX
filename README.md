@@ -5,22 +5,6 @@ Dibangun menggunakan **Firebase + Vanilla JS + Chart.js**.
 
 ---
 
-## 📂 Struktur Folder
-```bash
-gudang-stok-barang/
-│── index.html       # Halaman utama
-│── styles.css       # Styling tampilan (light & dark mode)
-│── app.js           # Logic aplikasi (Firebase, CRUD, Chart, Export, Auth)
-│── README.md        # Dokumentasi
-└── assets/          # Screenshot UI (untuk README)
-    ├── preview-login.png
-    ├── preview-dashboard.png
-    ├── preview-chart.png
-    └── preview-darkmode.png
-```
-
----
-
 ## 🚀 Fitur Utama
 - 🔑 **Login Google** (Firebase Authentication)  
 - 🔒 **Role Admin** → hanya admin (`reyhanmuhamadrizki1@gmail.com`) yang bisa menambah/edit/hapus produk  
