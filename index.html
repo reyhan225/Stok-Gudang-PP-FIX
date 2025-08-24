@@ -30,21 +30,12 @@
     <!-- Daftar Produk -->
     <section class="bg-gray-800 p-4 rounded-xl shadow flex flex-col">
       <h2 class="text-xl font-semibold mb-4">Daftar Produk</h2>
-      <input type="text" id="searchProduk" placeholder="Cari produk..." class="w-full p-2 mb-3 rounded text-black">
       <div id="produkList" class="overflow-y-auto h-80 border border-gray-700 rounded p-2"></div>
     </section>
 
     <!-- Riwayat -->
     <section class="bg-gray-800 p-4 rounded-xl shadow flex flex-col md:col-span-2">
       <h2 class="text-xl font-semibold mb-4">Riwayat Perubahan</h2>
-      <div class="flex gap-2 mb-3">
-        <select id="filterRiwayat" class="p-2 rounded text-black">
-          <option value="7">7 Hari Terakhir</option>
-          <option value="30">30 Hari Terakhir</option>
-          <option value="all">Semua</option>
-        </select>
-        <input type="date" id="tanggalSpesifik" class="p-2 rounded text-black">
-      </div>
       <div id="riwayatList" class="overflow-y-auto h-80 border border-gray-700 rounded p-2"></div>
     </section>
 
@@ -55,10 +46,10 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { 
       getFirestore, collection, addDoc, setDoc, getDoc, doc, updateDoc, 
-      increment, onSnapshot, query, orderBy, where 
+      increment, onSnapshot, query, orderBy 
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-    // ✅ Config Firebase punyamu
+    // ✅ Config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCk_9zFTS5CRgmIcuswG_gvpLVWx2PcF58",
       authDomain: "stok-gudang-divisi-pp.firebaseapp.com",
@@ -83,21 +74,23 @@
       const jumlah = parseInt(document.getElementById("jumlah").value);
       const penginput = document.getElementById("penginput").value.trim();
 
-      // ✅ Validasi
-      if (!nama) return alert("Nama produk wajib diisi!");
-      if (!kategori) return alert("Kategori wajib diisi!");
-      if (!jumlah || jumlah <= 0) return alert("Jumlah harus lebih dari 0!");
-      if (!penginput) return alert("Nama penginput wajib diisi!");
+      if (!nama || !kategori || !jumlah || !penginput) {
+        alert("Semua field wajib diisi!");
+        return;
+      }
 
       const productRef = doc(db, "produk", nama);
       const docSnap = await getDoc(productRef);
 
       if (docSnap.exists()) {
+        // kalau produk sudah ada → update jumlah
         await updateDoc(productRef, { jumlah: increment(jumlah) });
       } else {
+        // kalau produk baru → buat baru
         await setDoc(productRef, { nama, kategori, jumlah });
       }
 
+      // simpan ke riwayat
       await addDoc(collection(db, "riwayat"), {
         nama, kategori, jumlah, penginput, waktu: new Date()
       });
